@@ -45,11 +45,11 @@ export class RedHatLoginPage {
         Logger.debug('RedHatLoginPage.waitDisappearanceRedHatLoginWelcomePage');
         await this.driverHelper.waitDisappearance(By.id(this.LOGIN_BUTTON_ID));
     }
-    async enterUserNameRedHat(): Promise<void> {
+    async enterUserNameRedHat(ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): Promise<void> {
         Logger.debug('RedHatLoginPage.enterUserNameRedHat');
         const usernameFieldLocator: By = By.id(this.USERNAME_INPUT_ID);
         await this.driverHelper.waitVisibility(usernameFieldLocator, 20000);
-        await this.driverHelper.enterValue(usernameFieldLocator, TestConstants.TS_SELENIUM_OCP_USERNAME);
+        await this.driverHelper.enterValue(usernameFieldLocator, ocpUsername);
     }
 
     async clickNextButton(): Promise<void> {

@@ -40,7 +40,7 @@ export class DevfilesRegistryHelper {
                     const sampleEndpointContent: AxiosResponse = await this.getContent(sampleEndpoint);
                     const decodedFileContent: string = Buffer.from((sampleEndpointContent as any).content, 'base64').toString();
                     const metaYamlContent: any = YAML.parse(decodedFileContent);
-                    devfileSamples.push({name: sample, link: metaYamlContent.links.v2});
+                    devfileSamples.push({ name: sample, link: metaYamlContent.links.v2 });
                 }
                 Logger.debug(`${this.constructor.name}.${this.collectPathsToDevfilesFromRegistry.name}: samples list: ${JSON.stringify(devfileSamples)}`);
             }
@@ -49,7 +49,7 @@ export class DevfilesRegistryHelper {
                 const content: any[any] = await this.getInbuiltDevfilesRegistryContent();
 
                 for (const sample of content) {
-                    devfileSamples.push({name: sample.displayName, link: sample.links.v2});
+                    devfileSamples.push({ name: sample.displayName, link: sample.links.v2 });
                 }
                 Logger.debug(`${this.constructor.name}.${this.collectPathsToDevfilesFromRegistry.name}: samples list: ${JSON.stringify(devfileSamples)}`);
             }
@@ -60,6 +60,30 @@ export class DevfilesRegistryHelper {
             }
         }
         return devfileSamples;
+    }
+
+    async getInbuiltDevfileContentForCheCodeLatest(sampleNamePatterns?: string[]): Promise<any[]> {
+        Logger.debug(`${this.constructor.name}.${this.getInbuiltDevfileContentForCheCodeLatest.name}`);
+        const devfileSamples: any[] = [];
+        let commonSampleNamePattern: RegExp;
+        let content: any[any] = await this.getInbuiltDevfilesRegistryContent();
+        if (sampleNamePatterns) {
+            commonSampleNamePattern = new RegExp(sampleNamePatterns.join('|'), 'i');
+            content = content.filter((e: any) => commonSampleNamePattern.test(e.displayName));
+        }
+        for (const sample of content) {
+            const linkToDevWorkspaceYaml: any = TestConstants.TS_SELENIUM_BASE_URL + '/devfile-registry' + sample.links.devWorkspaces['che-incubator/che-code/latest'];
+            devfileSamples.push({
+                name: sample.displayName,
+                devWorkspaceConfigurationString: await this.getContent(linkToDevWorkspaceYaml)
+            });
+        }
+
+        return devfileSamples;
+    }
+
+    async getEditorContent(entry: string): Promise<any> {
+        return await this.getContent(`${TestConstants.TS_SELENIUM_BASE_URL}/${entry}`);
     }
 
     private async getContent(url: string, headers?: object): Promise<AxiosResponse> {

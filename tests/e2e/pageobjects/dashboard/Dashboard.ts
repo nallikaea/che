@@ -26,10 +26,7 @@ export class Dashboard {
     private static readonly LOADER_ALERT_XPATH: string = '//*[@data-testid="loader-alert"]';
     private static readonly LOGOUT_BUTTON_XPATH: string = '//button[text()="Logout"]';
 
-    private static getUserDropdownMenuButtonLocator(): By {
-        Logger.debug(`Dashboard.getUserDropdownMenuButtonLocator: get current user.`);
-
-        const currentUser: string = TestConstants.TS_SELENIUM_OCP_USERNAME;
+    private static getUserDropdownMenuButtonLocator(currentUser: string = TestConstants.TS_SELENIUM_OCP_USERNAME): By {
         Logger.debug(`Dashboard.getUserDropdownMenuButtonLocator: ${currentUser}.`);
 
         return By.xpath(`//*[text()="${currentUser}"]//parent::button`);
@@ -60,7 +57,7 @@ export class Dashboard {
         await this.workspaces.waitWorkspaceListItem(workspaceName);
         await this.workspaces.deleteWorkspaceByActionsButton(workspaceName);
         await this.workspaces.waitPage();
-        await this.workspaces.waitWorkspaceListItemAbcence(workspaceName);
+        await this.workspaces.waitWorkspaceListItemAbsence(workspaceName);
     }
 
     async stopAndRemoveWorkspaceByUI(workspaceName: string): Promise<void> {
@@ -68,7 +65,7 @@ export class Dashboard {
 
         await this.stopWorkspaceByUI(workspaceName);
         await this.workspaces.deleteWorkspaceByActionsButton(workspaceName);
-        await this.workspaces.waitWorkspaceListItemAbcence(workspaceName);
+        await this.workspaces.waitWorkspaceListItemAbsence(workspaceName);
     }
 
     async openDashboard(): Promise<void> {
@@ -134,11 +131,11 @@ export class Dashboard {
         return await this.driverHelper.waitAndGetText(By.css('[data-testid="recent-workspace-item"]'), timeout);
     }
 
-    async logout(timeout: number = TimeoutConstants.TS_COMMON_DASHBOARD_WAIT_TIMEOUT): Promise<void> {
+    async logout(ocpUser?: string, timeout: number = TimeoutConstants.TS_COMMON_DASHBOARD_WAIT_TIMEOUT): Promise<void> {
         Logger.debug(`Dashboard.logout`);
 
         await this.openDashboard();
-        await this.driverHelper.waitAndClick(Dashboard.getUserDropdownMenuButtonLocator(), timeout);
+        await this.driverHelper.waitAndClick(Dashboard.getUserDropdownMenuButtonLocator(ocpUser), timeout);
         await this.driverHelper.waitAndClick(By.xpath(Dashboard.LOGOUT_BUTTON_XPATH), timeout);
         await this.driverHelper.waitDisappearance(Dashboard.getUserDropdownMenuButtonLocator(), timeout);
     }

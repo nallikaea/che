@@ -45,7 +45,7 @@ const webCheCodeLocators: Locators = new CheCodeLocatorLoader().webCheCodeLocato
 const samples: string[] = TestConstants.TS_SAMPLE_LIST.split(',');
 const browserTabsUtil: BrowserTabsUtil = e2eContainer.get(CLASSES.BrowserTabsUtil);
 
-suite(`Check if recommended extensions installed for ${samples}`, async function (): Promise<void> {
+suite(`Check if recommended extensions installed for ${samples} ${TestConstants.ENVIRONMENT}`, async function (): Promise<void> {
     let projectSection: ViewSection;
     let extensionsView: SideBarView | undefined;
     let extensionSection: ExtensionsViewSection;
@@ -98,9 +98,11 @@ suite(`Check if recommended extensions installed for ${samples}`, async function
             Logger.debug(`editor.getText(): get recommended extensions as text from editor, delete comments and parse to object.`);
             recommendedExtensions = JSON.parse((await editor.getText()).replace(/\/\*[\s\S]*?\*\/|(?<=[^:])\/\/.*|^\/\/.*/g, '').trim());
             Logger.debug(`recommendedExtensions.recommendations: Get recommendations clear names using map().`);
-            recommendedExtensions.recommendations = recommendedExtensions.recommendations.map((r: { split: (arg: string) => [any, any]; }) => {
+            recommendedExtensions.recommendations = recommendedExtensions.recommendations.map((r: {
+                split: (arg: string) => [any, any];
+            }) => {
                 const [publisher, name] = r.split('.');
-                return {publisher, name};
+                return { publisher, name };
             });
             Logger.info(`Recommended extension for this workspace:\n${JSON.stringify(recommendedExtensions.recommendations)}.`);
         });

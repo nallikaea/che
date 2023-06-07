@@ -16,12 +16,11 @@ import { TestConstants } from '../../constants/TestConstants';
 (async function (): Promise<void> {
 
     const devfilesRegistryHelper: DevfilesRegistryHelper = new DevfilesRegistryHelper();
-    const devfileSamples: any = await devfilesRegistryHelper.collectPathsToDevfilesFromRegistry();
+    const devfileSamples: any = await devfilesRegistryHelper.getInbuiltDevfilesRegistryContent();
 
     for (const devfileSample of devfileSamples) {
-        suite(`Devfile acceptance test suite for ${devfileSample.name} ${TestConstants.ENVIRONMENT}`, async function (): Promise<void> {
+        suite(`Inbuilt DevWorkspaces test suite for "${devfileSample.displayName}" sample ${TestConstants.ENVIRONMENT}`, async function (): Promise<void> {
             this.bail(false);
-            this.timeout(1500000); // 25 minutes because build of Quarkus sample takes 20+ minutes
             let devWorkspaceConfigurationHelper: DevWorkspaceConfigurationHelper;
             let kubernetesCommandLineToolsExecutor: KubernetesCommandLineToolsExecutor;
             let containerTerminal: KubernetesCommandLineToolsExecutor.ContainerTerminal;
@@ -33,9 +32,13 @@ import { TestConstants } from '../../constants/TestConstants';
 
             test('Get DevWorkspace configuration', async function (): Promise<void> {
                 devWorkspaceConfigurationHelper = new DevWorkspaceConfigurationHelper({
-                    devfileUrl: devfileSample.link,
+                    devfileUrl: devfileSample.links.v2,
+                    editorContent: (await devfilesRegistryHelper.getEditorContent('plugin-registry/v3/plugins/che-incubator/che-code/latest/devfile.yaml')) as string
                 });
                 devfileContext = await devWorkspaceConfigurationHelper.generateDevfileContext();
+
+                if (TestConstants.TS_API_TEST_UDI_IMAGE()) { devfileContext.devfile.components['0'].container.image = TestConstants.TS_API_TEST_UDI_IMAGE(); }
+
                 devWorkspaceName = devfileContext?.devWorkspace?.metadata?.name;
 
                 kubernetesCommandLineToolsExecutor = new KubernetesCommandLineToolsExecutor(devWorkspaceName);
@@ -72,7 +75,7 @@ import { TestConstants } from '../../constants/TestConstants';
             });
 
             test('Check if project was created', function (): void {
-                clonedProjectName = StringUtil.getProjectNameFromGitUrl(devfileSample.link);
+                clonedProjectName = StringUtil.getProjectNameFromGitUrl(devfileSample.links.v2);
                 expect(containerTerminal.ls().stdout).includes(clonedProjectName);
             });
 
@@ -82,6 +85,7 @@ import { TestConstants } from '../../constants/TestConstants';
             });
 
             test(`Check if build commands returns success`, function (): void {
+                this.test?.timeout(1500000); // 25 minutes because build of Quarkus sample takes 20+ minutes
                 if (devfilesBuildCommands.length === 0) {
                     Logger.info(`Devfile does not contains build commands.`);
                 } else {

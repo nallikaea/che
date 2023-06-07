@@ -26,15 +26,15 @@ export class KubernetesCommandLineToolsExecutor extends ShellExecutor {
     }
 
     // login to Openshift cluster with username and password
-    loginToOcp(): void {
+    loginToOcp(ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): void {
         if (this.KUBERNETES_COMMAND_LINE_TOOL === KubernetesCommandLineTool.OC) {
             Logger.debug(`${this.getLoggingName(this.loginToOcp.name)}: Login to the "OC" client.`);
             const url: string = this.getServerUrl();
-            if (this.isUserLoggedIn()) {
+            if (this.isUserLoggedIn(ocpUsername)) {
                 Logger.debug(`${this.getLoggingName(this.loginToOcp.name)}: User already logged`);
             } else {
-                Logger.debug(`${this.getLoggingName(this.loginToOcp.name)}: Login ${url}, ${TestConstants.TS_SELENIUM_OCP_USERNAME}`);
-                exec(`oc login --server=${url} -u=${TestConstants.TS_SELENIUM_OCP_USERNAME} -p=${TestConstants.TS_SELENIUM_OCP_PASSWORD} --insecure-skip-tls-verify`);
+                Logger.debug(`${this.getLoggingName(this.loginToOcp.name)}: Login ${url}, ${ocpUsername}`);
+                exec(`oc login --server=${url} -u=${ocpUsername} -p=${TestConstants.TS_SELENIUM_OCP_PASSWORD} --insecure-skip-tls-verify`);
             }
         } else {
             Logger.debug(`${this.getLoggingName(this.loginToOcp.name)}: doesn't support login command`);
@@ -74,6 +74,11 @@ export class KubernetesCommandLineToolsExecutor extends ShellExecutor {
         return ShellExecutor.execWithLog(`${(this.KUBERNETES_COMMAND_LINE_TOOL)} exec -i ${KubernetesCommandLineToolsExecutor.pod} -n ${this.namespace} -c ${container} -- sh -c '${commandToExecute}'`);
     }
 
+    testImage(image: string, commandToExecute: string): ShellString {
+        Logger.debug(`${this.getLoggingName(this.executeCommand.name)}:`);
+        return ShellExecutor.execWithLog(`${(this.KUBERNETES_COMMAND_LINE_TOOL)} run -i -t test --image=$'${image}' --image-pull-policy=Always --restart=Never --rm=true --command -- '${commandToExecute}'`);
+    }
+
     applyYamlConfigurationAsStringOutput(yamlConfiguration: string): ShellString {
         Logger.debug(`${this.getLoggingName(this.applyYamlConfigurationAsStringOutput.name)}:`);
         return ShellExecutor.execWithLog(`cat <<EOF | ${this.KUBERNETES_COMMAND_LINE_TOOL} apply -n ${this.namespace} -f - \n` +
@@ -105,12 +110,19 @@ export class KubernetesCommandLineToolsExecutor extends ShellExecutor {
 
     createProject(projectName: string): void {
         Logger.debug(`${this.getLoggingName(this.createProject.name)}: Create new project "${projectName}".`);
-        ShellExecutor.execWithLog(`${this.KUBERNETES_COMMAND_LINE_TOOL} new-project ${projectName} -n ${this.namespace}`);
+        ShellExecutor.execWithLog(`${this.KUBERNETES_COMMAND_LINE_TOOL} new-project ${projectName}`);
     }
 
     deleteProject(projectName: string): void {
         Logger.debug(`${this.getLoggingName(this.deleteProject.name)}: Delete "${projectName}".`);
-        ShellExecutor.execWithLog(`${this.KUBERNETES_COMMAND_LINE_TOOL} delete project ${projectName} -n ${this.namespace}`);
+        ShellExecutor.execWithLog(`${this.KUBERNETES_COMMAND_LINE_TOOL} delete project ${projectName}`);
+    }
+
+    public getNamespaceForCurrentApplication(ocpUsername: string): string {
+        Logger.debug(`${this.getLoggingName(this.getNamespaceForCurrentApplication.name)}`);
+        return TestConstants.TS_SELENIUM_BASE_URL.includes('devspaces') ? ocpUsername + '-devspaces'
+            : TestConstants.TS_SELENIUM_BASE_URL.includes('che') ? ocpUsername + '-che'
+                : 'default';
     }
 
     private getPodAndContainerNames(): void {
@@ -118,21 +130,19 @@ export class KubernetesCommandLineToolsExecutor extends ShellExecutor {
         KubernetesCommandLineToolsExecutor.container = this.getContainerName();
     }
 
-    private isUserLoggedIn(): boolean {
+    private isUserLoggedIn(ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): boolean {
         const whoamiCommandOutput: ShellString = ShellExecutor.execWithLog('oc whoami && oc whoami --show-server=true');
 
-        return whoamiCommandOutput.stdout.includes(TestConstants.TS_SELENIUM_OCP_USERNAME) && whoamiCommandOutput.stdout.includes(this.getServerUrl());
+        return whoamiCommandOutput.stdout.includes(ocpUsername) && whoamiCommandOutput.stdout.includes(this.getServerUrl());
     }
 
     private getLoggingName(methodName: string): string {
         return `${this.constructor.name}.${methodName} - ${(this.KUBERNETES_COMMAND_LINE_TOOL)}`;
     }
 
-    private setNamespace(_namespace: string | undefined): string {
+    private setNamespace(_namespace: string | undefined, ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): string {
         _namespace = _namespace !== undefined ? _namespace
-            : TestConstants.TS_SELENIUM_BASE_URL.includes('devspaces') ? TestConstants.TS_SELENIUM_OCP_USERNAME + '-devspaces'
-                : TestConstants.TS_SELENIUM_BASE_URL.includes('che') ? TestConstants.TS_SELENIUM_OCP_USERNAME + '-che'
-                    : 'default';
+            : this.getNamespaceForCurrentApplication(ocpUsername);
         return _namespace;
     }
 
@@ -161,7 +171,7 @@ export namespace KubernetesCommandLineToolsExecutor {
         }
 
         gitClone(repository: string): ShellString {
-            return this.executeCommand('git clone ' + repository);
+            return this.executeCommand('git -c http.sslVerify=false clone ' + repository);
         }
 
         removeFolder(path: string): ShellString {

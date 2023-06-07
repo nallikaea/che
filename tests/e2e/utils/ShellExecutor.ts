@@ -10,7 +10,7 @@ export class ShellExecutor {
         return this.execWithLog(`curl -k ${link}`);
     }
 
-    protected static execWithLog(command: string): ShellString {
+    static execWithLog(command: string): ShellString {
         echo(command);
         return exec(command);
     }

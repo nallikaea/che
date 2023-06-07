@@ -47,7 +47,7 @@ const loginTests: LoginTests = e2eContainer.get(CLASSES.LoginTests);
 
 const webCheCodeLocators: Locators = new CheCodeLocatorLoader().webCheCodeLocators;
 
-suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SELENIUM_FACTORY_GIT_PROVIDER} repository`, async function (): Promise<void> {
+suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SELENIUM_FACTORY_GIT_PROVIDER} repository ${TestConstants.ENVIRONMENT}`, async function (): Promise<void> {
     const oauthPage: OauthPage = new OauthPage(driverHelper);
 
     let projectSection: ViewSection;
@@ -185,8 +185,13 @@ suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SE
         expect(isCommitButtonDisabled).eql('true');
     });
 
-    test(`Stop and remove the workspace`, async function (): Promise<void> {
-        await workspaceHandlingTests.stopAndRemoveWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+    test('Stop the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.stopWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+        await browserTabsUtil.closeAllTabsExceptCurrent();
+    });
+
+    test('Delete the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.removeWorkspace(WorkspaceHandlingTests.getWorkspaceName());
     });
 
     loginTests.logoutFromChe();

@@ -28,7 +28,7 @@ export class RegularUserOcpCheLoginPage implements ICheLoginPage {
         @inject(CLASSES.OcpLoginPage) private readonly ocpLogin: OcpLoginPage,
         @inject(CLASSES.DriverHelper) private readonly driverHelper: DriverHelper) { }
 
-    async login(): Promise<void> {
+    async login(ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): Promise<void> {
         Logger.debug('RegularUserOcpCheLoginPage.login');
 
         Logger.debug('RegularUserOcpCheLoginPage.login wait for LogInWithOpenShift page and click button');
@@ -40,7 +40,7 @@ export class RegularUserOcpCheLoginPage implements ICheLoginPage {
         }
 
         await this.ocpLogin.waitOpenShiftLoginWelcomePage();
-        await this.ocpLogin.enterUserNameOpenShift(TestConstants.TS_SELENIUM_OCP_USERNAME);
+        await this.ocpLogin.enterUserNameOpenShift(ocpUsername);
         await this.ocpLogin.enterPasswordOpenShift(TestConstants.TS_SELENIUM_OCP_PASSWORD);
         await this.ocpLogin.clickOnLoginButton();
         await this.ocpLogin.waitDisappearanceOpenShiftLoginWelcomePage();

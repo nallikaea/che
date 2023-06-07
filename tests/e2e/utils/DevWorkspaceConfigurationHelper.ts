@@ -36,22 +36,23 @@ export class DevWorkspaceConfigurationHelper {
     constructor(params: IContextParams) {
         // check if all undefined
         if (!(params.editorPath || params.editorEntry || params.editorContent)) {
-            params.editorEntry = 'che-incubator/che-code/latest';
+            if (TestConstants.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI && !params.editorContent) {
+                params.editorContent = ShellExecutor.curl(TestConstants.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI).stdout;
+            } else {
+                params.editorEntry = 'che-incubator/che-code/latest';
+            }
         }
         // check if one or both has value
-        if (TestConstants.TS_API_TEST_UDI_IMAGE || params.defaultComponentImage) {
+        if (TestConstants.TS_API_TEST_UDI_IMAGE() || params.defaultComponentImage) {
             params.injectDefaultComponent = 'true';
             // check if not explicitly passed than assign value from the constants
             if (!params.defaultComponentImage) {
-                params.defaultComponentImage = TestConstants.TS_API_TEST_UDI_IMAGE;
+                params.defaultComponentImage = TestConstants.TS_API_TEST_UDI_IMAGE();
             }
         }
         // assign value from the constants if not explicitly passed
         if (TestConstants.TS_API_TEST_PLUGIN_REGISTRY_URL && !params.pluginRegistryUrl) {
             params.pluginRegistryUrl = TestConstants.TS_API_TEST_PLUGIN_REGISTRY_URL;
-        }
-        if (TestConstants.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI && !params.editorContent) {
-            params.editorContent = ShellExecutor.curl(TestConstants.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI).stdout;
         }
         this.params = params;
     }
@@ -61,13 +62,25 @@ export class DevWorkspaceConfigurationHelper {
         if (!this.params.projects) {
             this.params.projects = [];
         }
-        return await this.generator.generateDevfileContext(
+        const devfileContext: DevfileContext = await this.generator.generateDevfileContext(
             {
                 ...this.params,
                 projects: this.params.projects
             },
             axios.default as any
         );
+        // if (TestConstants.TS_API_TEST_UDI_IMAGE()) { devfileContext.devfile.components['0'].container.image = TestConstants.TS_API_TEST_UDI_IMAGE; }
+        //
+        // // added attributes to build containers
+        // devfileContext.devWorkspace.spec!.template!.attributes = YAML.parse(`
+        //     controller.devfile.io/devworkspace-config:
+        //       name: devworkspace-config
+        //       namespace: openshift-devspaces
+        //     controller.devfile.io/scc: container-build
+        //     controller.devfile.io/storage-type: per-user`
+        // );
+
+        return devfileContext;
     }
 
     // write templates and then DevWorkspace in a single file
@@ -76,8 +89,24 @@ export class DevWorkspaceConfigurationHelper {
         const allContentArray: any[] = context.devWorkspaceTemplates.map(
             (template: V1alpha2DevWorkspaceTemplate) => YAML.stringify(template)
         );
-        allContentArray.push(YAML.stringify(context.devWorkspace));
+        allContentArray.push(
+            YAML.stringify(context.devWorkspace)
+        );
 
         return allContentArray.join('---\n');
+    }
+
+    async getDevWorkspaceConfigurationsAsYaml(allContentString: string): Promise<string> {
+        Logger.debug(`${this.constructor.name}.${this.getDevWorkspaceConfigurationsAsYaml.name}`);
+        let content: any  = {};
+        const contentArray: string[] = allContentString.split('---\n');
+        contentArray.forEach((e: any) => {
+            e = YAML.parse(e);
+            e.kind === 'DevWorkspace' ? content.DevWorkspace = e
+                : e.kind === 'DevWorkspaceTemplate' ? content.DevWorkspaceTemplate = e
+                    : Logger.error(`${this.constructor.name}.${this.getDevWorkspaceConfigurationsAsYaml.name} - Problems with configuration parsing, string should be in format "DevWorkspace\\n---\\nDevWorkspaceTemplate"`);
+        });
+
+        return content;
     }
 }

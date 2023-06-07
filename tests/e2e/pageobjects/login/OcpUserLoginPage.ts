@@ -21,7 +21,7 @@ export class OcpUserLoginPage implements IOcpLoginPage {
     constructor(
         @inject(CLASSES.OcpLoginPage) private readonly ocpLogin: OcpLoginPage) { }
 
-    async login(): Promise<void> {
+    async login(ocpUsername: string = TestConstants.TS_SELENIUM_OCP_USERNAME): Promise<void> {
         Logger.debug('OcpUserLoginPage.login');
 
         if (TestConstants.TS_OCP_LOGIN_PAGE_PROVIDER_TITLE !== '') {
@@ -29,7 +29,7 @@ export class OcpUserLoginPage implements IOcpLoginPage {
         }
 
         await this.ocpLogin.waitOpenShiftLoginWelcomePage();
-        await this.ocpLogin.enterUserNameOpenShift(TestConstants.TS_SELENIUM_OCP_USERNAME);
+        await this.ocpLogin.enterUserNameOpenShift(ocpUsername);
         await this.ocpLogin.enterPasswordOpenShift(TestConstants.TS_SELENIUM_OCP_PASSWORD);
         await this.ocpLogin.clickOnLoginButton();
         await this.ocpLogin.waitDisappearanceOpenShiftLoginWelcomePage();

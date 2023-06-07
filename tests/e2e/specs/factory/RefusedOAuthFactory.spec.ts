@@ -27,7 +27,6 @@ import {
     ViewSection
 } from 'monaco-page-objects';
 import { expect } from 'chai';
-import WebDriverError = error.WebDriverError;
 import { registerRunningWorkspace } from '../MochaHooks';
 import { BrowserTabsUtil } from '../../utils/BrowserTabsUtil';
 import { CLASSES } from '../../configs/inversify.types';
@@ -41,6 +40,7 @@ import { StringUtil } from '../../utils/StringUtil';
 import { Logger } from '../../utils/Logger';
 import { TimeoutConstants } from '../../constants/TimeoutConstants';
 import { LoginTests } from '../../tests-library/LoginTests';
+import WebDriverError = error.WebDriverError;
 
 const browserTabsUtil: BrowserTabsUtil = e2eContainer.get(CLASSES.BrowserTabsUtil);
 const workspaceHandlingTests: WorkspaceHandlingTests = e2eContainer.get(CLASSES.WorkspaceHandlingTests);
@@ -49,7 +49,7 @@ const webCheCodeLocators: Locators = new CheCodeLocatorLoader().webCheCodeLocato
 const driverHelper: DriverHelper = e2eContainer.get(CLASSES.DriverHelper);
 const loginTests: LoginTests = e2eContainer.get(CLASSES.LoginTests);
 
-suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SELENIUM_FACTORY_GIT_PROVIDER} repository and deny the access`, async function (): Promise<void> {
+suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SELENIUM_FACTORY_GIT_PROVIDER} repository and deny the access ${TestConstants.ENVIRONMENT}`, async function (): Promise<void> {
     const oauthPage: OauthPage = new OauthPage(driverHelper);
 
     let projectSection: ViewSection;
@@ -246,8 +246,13 @@ suite(`Create a workspace via launching a factory from the ${TestConstants.TS_SE
         });
     }
 
-    test(`Stop and remove the workspace`, async function (): Promise<void> {
-        await workspaceHandlingTests.stopAndRemoveWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+    test('Stop the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.stopWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+        await browserTabsUtil.closeAllTabsExceptCurrent();
+    });
+
+    test('Delete the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.removeWorkspace(WorkspaceHandlingTests.getWorkspaceName());
     });
 
     loginTests.logoutFromChe();

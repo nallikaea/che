@@ -65,12 +65,13 @@ export class OcpImportFromGitPage {
 
         await this.driverHelper.scrollToAndClick(OcpImportFromGitPage.ADD_LABEL_LINK_LOCATOR);
         await this.driverHelper.scrollToAndEnterValue(OcpImportFromGitPage.ADD_LABEL_INPUT_LOCATOR, label);
+        await this.driverHelper.getAction().doubleClick().perform();
     }
 
     async submitConfiguration(): Promise<OcpApplicationPage> {
         Logger.debug(`${this.constructor.name}.${this.submitConfiguration.name}`);
 
-        await this.driverHelper.waitAndClick(OcpImportFromGitPage.SUBMIT_BUTTON_LOCATOR);
+        await this.driverHelper.scrollToAndClick(OcpImportFromGitPage.SUBMIT_BUTTON_LOCATOR);
         return e2eContainer.get(CLASSES.OcpApplicationPage);
     }
 

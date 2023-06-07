@@ -19,6 +19,7 @@ import { e2eContainer } from '../configs/inversify.config';
 import { DriverHelper } from '../utils/DriverHelper';
 import { ITestWorkspaceUtil } from '../utils/workspace/ITestWorkspaceUtil';
 import { Logger } from '../utils/Logger';
+import { allure } from 'allure-mocha/runtime';
 
 const driverHelper: DriverHelper = e2eContainer.get(CLASSES.DriverHelper);
 const testWorkspaceUtil: ITestWorkspaceUtil = e2eContainer.get(TYPES.WorkspaceUtil);
@@ -26,7 +27,10 @@ const testWorkspaceUtil: ITestWorkspaceUtil = e2eContainer.get(TYPES.WorkspaceUt
 let latestWorkspace: string = '';
 
 export function registerRunningWorkspace(workspaceName: string): void {
-    Logger.debug(`MochaHooks.registerRunningWorkspace with workspaceName:${workspaceName}`);
+    workspaceName !== ''
+        ? Logger.debug(`MochaHooks.registerRunningWorkspace with workspaceName:${workspaceName}`)
+        : Logger.debug(`MochaHooks.registerRunningWorkspace delete workspace name`);
+
     latestWorkspace = workspaceName;
 }
 
@@ -49,7 +53,7 @@ exports.mochaHooks = {
         async function prolongTimeoutConstantsInDebugMode(): Promise<void> {
             if (TestConstants.TS_DEBUG_MODE) {
                 for (let [timeout, seconds] of Object.entries(TimeoutConstants)) {
-                    Object.defineProperty(TimeoutConstants, timeout, {value: seconds as number * 100});
+                    Object.defineProperty(TimeoutConstants, timeout, { value: seconds as number * 2 });
                 }
             }
         },
@@ -66,6 +70,18 @@ exports.mochaHooks = {
             if (!TestConstants.TS_DEBUG_MODE && TestConstants.TS_USE_WEB_DRIVER_FOR_TEST) {
                 await driverHelper.getDriver().quit();
                 Logger.info('Chrome driver session stopped.');
+            }
+        },
+    ],
+    afterEach: [
+        async function (this: Mocha.Context): Promise<void> {
+            if (this.currentTest?.state === 'failed') {
+                try {
+                    const screenshot: string = await driverHelper.getDriver().takeScreenshot();
+                    allure.attachment('Screenshot', Buffer.from(screenshot, 'base64'), 'image/png');
+                } catch (e) {
+                    allure.attachment('Log', JSON.stringify(e), 'text/plain');
+                }
             }
         },
     ]

@@ -29,7 +29,7 @@ export class OcpRedHatLoginPage implements ICheLoginPage {
         @inject(CLASSES.RedHatLoginPage) private readonly redHatLogin: RedHatLoginPage,
         @inject(CLASSES.DriverHelper) private readonly driverHelper: DriverHelper) { }
 
-    async login(): Promise<void> {
+    async login(ocpUsername?: string): Promise<void> {
         Logger.debug('OcpRedHatLoginPage.login');
 
         Logger.debug('OcpRedHatLoginPage.login wait for LogInWithOpenShift page and click button');
@@ -40,7 +40,7 @@ export class OcpRedHatLoginPage implements ICheLoginPage {
         await this.ocpLogin.clickOnLoginProviderTitle();
 
         await this.redHatLogin.waitRedHatLoginWelcomePage();
-        await this.redHatLogin.enterUserNameRedHat();
+        await this.redHatLogin.enterUserNameRedHat(ocpUsername);
         await this.redHatLogin.clickNextButton();
         await this.redHatLogin.enterPasswordRedHat();
         await this.redHatLogin.clickOnLoginButton();

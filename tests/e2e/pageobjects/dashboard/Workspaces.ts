@@ -160,7 +160,7 @@ export class Workspaces {
         await this.clickActionsStopWorkspaceButton(workspaceName);
     }
 
-    async waitWorkspaceListItemAbcence(workspaceName: string, timeout: number = TimeoutConstants.TS_COMMON_DASHBOARD_WAIT_TIMEOUT): Promise<void> {
+    async waitWorkspaceListItemAbsence(workspaceName: string, timeout: number = TimeoutConstants.TS_COMMON_DASHBOARD_WAIT_TIMEOUT): Promise<void> {
         Logger.debug(`Workspaces.waitWorkspaceListItemAbcence "${workspaceName}"`);
 
         const polling: number = TestConstants.TS_SELENIUM_DEFAULT_POLLING;

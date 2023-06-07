@@ -15,38 +15,44 @@ import { Logger } from '../../utils/Logger';
 import { ProjectAndFileTests } from '../../tests-library/ProjectAndFileTests';
 import { LoginTests } from '../../tests-library/LoginTests';
 import { registerRunningWorkspace } from '../MochaHooks';
+import { BrowserTabsUtil } from '../../utils/BrowserTabsUtil';
+import { TestConstants } from '../../constants/TestConstants';
 
+const stackName: string = 'Empty Workspace';
 const workspaceHandlingTests: WorkspaceHandlingTests = e2eContainer.get(CLASSES.WorkspaceHandlingTests);
 const projectAndFileTests: ProjectAndFileTests = e2eContainer.get(CLASSES.ProjectAndFileTests);
 const loginTests: LoginTests = e2eContainer.get(CLASSES.LoginTests);
-const stackName: string = 'Empty Workspace';
+const browserTabsUtil: BrowserTabsUtil = e2eContainer.get(CLASSES.BrowserTabsUtil);
+suite(`${stackName} test ${TestConstants.ENVIRONMENT}`, async () => {
+    loginTests.loginIntoChe();
+    workspaceHandlingTests.createAndOpenWorkspace(stackName);
+    workspaceHandlingTests.obtainWorkspaceNameFromStartingPage();
 
-suite(`${stackName} test`, async () => {
-    suite(`Create ${stackName} workspace`, async () => {
-        loginTests.loginIntoChe();
-        workspaceHandlingTests.createAndOpenWorkspace(stackName);
-        workspaceHandlingTests.obtainWorkspaceNameFromStartingPage();
-        test('Register running workspace', async () => {
-            registerRunningWorkspace(WorkspaceHandlingTests.getWorkspaceName());
-        });
-        test('Wait workspace readiness', async() => {
-            await projectAndFileTests.waitWorkspaceReadinessForCheCodeEditor();
-
-            const workbench: Workbench = new Workbench();
-            const activityBar: ActivityBar = workbench.getActivityBar();
-            const activityBarControls: ViewControl[] = await activityBar.getViewControls();
-
-            Logger.debug(`Editor sections:`);
-            for (const control of activityBarControls) {
-                Logger.debug(`${await control.getTitle()}`);
-            }
-        });
+    test('Register running workspace', async () => {
+        registerRunningWorkspace(WorkspaceHandlingTests.getWorkspaceName());
     });
 
-    suite('Stopping and deleting the workspace', async () => {
-        test(`Stop and remove workspace`, async () => {
-            await workspaceHandlingTests.stopAndRemoveWorkspace(WorkspaceHandlingTests.getWorkspaceName());
-        });
-        loginTests.logoutFromChe();
+    test('Wait workspace readiness', async () => {
+        await projectAndFileTests.waitWorkspaceReadinessForCheCodeEditor();
+
+        const workbench: Workbench = new Workbench();
+        const activityBar: ActivityBar = workbench.getActivityBar();
+        const activityBarControls: ViewControl[] = await activityBar.getViewControls();
+
+        Logger.debug(`Editor sections:`);
+        for (const control of activityBarControls) {
+            Logger.debug(`${await control.getTitle()}`);
+        }
     });
+
+    test('Stop the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.stopWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+        await browserTabsUtil.closeAllTabsExceptCurrent();
+    });
+
+    test('Delete the workspace', async function (): Promise<void> {
+        await workspaceHandlingTests.removeWorkspace(WorkspaceHandlingTests.getWorkspaceName());
+    });
+
+    loginTests.logoutFromChe();
 });

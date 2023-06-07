@@ -60,7 +60,7 @@ e2eContainer.bind<OcpLoginPage>(CLASSES.OcpLoginPage).to(OcpLoginPage);
 e2eContainer.bind<OcpMainPage>(CLASSES.OcpMainPage).to(OcpMainPage);
 e2eContainer.bind<OcpImportFromGitPage>(CLASSES.OcpImportFromGitPage).to(OcpImportFromGitPage);
 e2eContainer.bind<OcpApplicationPage>(CLASSES.OcpApplicationPage).to(OcpApplicationPage);
-
+// e2eContainer.bind<TestWorkspaceUtil>(CLASSES.TestWorkspaceUtil).to(TestWorkspaceUtil);
 
 e2eContainer.bind<CheLoginPage>(CLASSES.CheLoginPage).to(CheLoginPage);
 e2eContainer.bind<CheApiRequestHandler>(CLASSES.CheApiRequestHandler).to(CheApiRequestHandler);

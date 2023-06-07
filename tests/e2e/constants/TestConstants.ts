@@ -13,7 +13,6 @@ export enum GitProviderType {
     BITBUCKET = 'bitbucket'
 }
 
-
 export enum KubernetesCommandLineTool {
     OC = 'oc',
     KUBECTL = 'kubectl',
@@ -29,6 +28,8 @@ export const TestConstants: any = {
      */
     TS_SELENIUM_BASE_URL: !process.env.TS_SELENIUM_BASE_URL ? 'http://sample-url' : process.env.TS_SELENIUM_BASE_URL.replace(/\/$/, ''),
 
+    ENVIRONMENT: process.env.ENVIRONMENT || 'local run',
+
     /**
      * Run browser in "Headless" (hidden) mode, "false" by default.
      */
@@ -38,7 +39,10 @@ export const TestConstants: any = {
      * Create instance of chromedriver, "true" by default. Should be "false" to run only API tests.
      */
     TS_USE_WEB_DRIVER_FOR_TEST: process.env.TS_USE_WEB_DRIVER_FOR_TEST !== 'false',
-
+    /**
+     * Stop wholl test run if one test step will fail, false by default
+     */
+    STOP_ON_TEST_FAIL: process.env.STOP_ON_TEST_FAIL === 'true',
     /**
      * Run browser in "Fullscreen" (kiosk) mode.
      * Default to true if undefined
@@ -182,7 +186,7 @@ export const TestConstants: any = {
     /**
      * Print all timeout variables when tests launch, default to false
      */
-    TS_SELENIUM_PRINT_TIMEOUT_VARIABLES: process.env.TS_SELENIUM_PRINT_TIMEOUT_VARIABLES || false,
+    TS_SELENIUM_PRINT_TIMEOUT_VARIABLES: process.env.TS_SELENIUM_PRINT_TIMEOUT_VARIABLES || true,
 
     /**
      * URL of the workspace created by devworkspace-controller
@@ -236,11 +240,16 @@ export const TestConstants: any = {
 
     // 'quay.io/devfile/universal-developer-image:latest'
     // is default assigned by DevWorkspaceConfigurationHelper.generateDevfileContext() using @eclipse-che/che-devworkspace-generator
-    TS_API_TEST_UDI_IMAGE: process.env.TS_API_TEST_UDI_IMAGE || undefined,
-
+    // 'image: registry.redhat.io/devspaces/udi-rhel8@sha256:c0d93172b58f435d9f511b94764be18de393ec82ab73f195cfa0e3cb9c9098ad'
+    TS_API_TEST_UDI_IMAGE(): string {
+        return process.env.TS_API_TEST_UDI_IMAGE || !TestConstants.TS_SELENIUM_BASE_URL.includes('airgap') ?
+            'registry.redhat.io/devspaces/udi-rhel8@sha256:c0d93172b58f435d9f511b94764be18de393ec82ab73f195cfa0e3cb9c9098ad'
+            : 'ec2-3-129-39-237.us-east-2.compute.amazonaws.com:5000/devspaces/udi-rhel8@sha256:c0d93172b58f435d9f511b94764be18de393ec82ab73f195cfa0e3cb9c9098ad';
+    },
     // https://eclipse-che.github.io/che-plugin-registry/main/v3/plugins/che-incubator/che-code/latest/devfile.yaml
     // is default assigned by DevWorkspaceConfigurationHelper.generateDevfileContext() using @eclipse-che/che-devworkspace-generator
-    TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI: process.env.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI || undefined,
+    // https://devspaces.apps.ocp412-mdolhal.crw-qe.com/plugin-registry/v3/plugins/che-incubator/che-code/latest/devfile.yaml
+    TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI: process.env.TS_API_TEST_CHE_CODE_EDITOR_DEVFILE_URI || '',
 
     // https://eclipse-che.github.io/che-plugin-registry/main/v3
     // is default assigned by DevWorkspaceConfigurationHelper.generateDevfileContext() using @eclipse-che/che-devworkspace-generator
@@ -252,4 +261,9 @@ export const TestConstants: any = {
     TS_API_ACCEPTANCE_TEST_REGISTRY_URL(): string {
         return process.env.TS_API_ACCEPTANCE_TEST_REGISTRY_URL || SupportedDevfilesRegistries.INBUILT_APPLICATION_DEVFILE_REGISTRY_URL();
     },
+
+    PODMAN_PASSWORD: '',
+
+    PODMAN_LOGIN: '',
 };
+
